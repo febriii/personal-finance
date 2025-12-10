@@ -1,0 +1,37 @@
+services:
+  backend:
+    build: ./backend
+    container_name: finance_backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://finance_user:password123@db:5432/finance_db
+      - FLASK_ENV=production
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    container_name: finance_frontend
+    restart: always
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    container_name: finance_db
+    restart: always
+    environment:
+      POSTGRES_USER: finance_user
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: finance_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
