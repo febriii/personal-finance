@@ -26,7 +26,7 @@ personal-finance/
 
 🛠️ Development Setup
 1. Clone the repository
-    git clone https://github.com/febrii/personal-finance.git
+    git clone https://github.com/febriii/personal-finance.git
     cd personal-finance
 
 
