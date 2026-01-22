@@ -18,11 +18,7 @@ export class TransactionService {
 
   constructor(private http: HttpClient) {}
 
-  getTransactions(token: string): Observable<Transaction[]> {
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    return this.http.get<Transaction[]>(this.apiUrl, { headers });
+  getTransactions() {
+    return this.http.get<any[]>(this.apiUrl);
   }
 }

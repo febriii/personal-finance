@@ -9,7 +9,7 @@ tx_bp = Blueprint("transactions", __name__)
 @tx_bp.get("/")
 @jwt_required()
 def list_transactions():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     transactions = Transaction.query.filter_by(user_id=user_id).all()
 
     return [{"id": t.id, "amount": t.amount, "type": t.type,
@@ -19,7 +19,7 @@ def list_transactions():
 @tx_bp.post("/")
 @jwt_required()
 def create_transaction():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.json
 
     tx = Transaction(
@@ -35,3 +35,17 @@ def create_transaction():
     db.session.commit()
 
     return {"message": "Transaction added"}
+
+@tx_bp.get("/public")
+def list_transactions_public():
+    transactions = Transaction.query.all()
+
+    return [
+        {
+            "id": t.id,
+            "amount": t.amount,
+            "description": t.description,
+            "date": t.date.isoformat() if t.date else None
+        }
+        for t in transactions
+    ]

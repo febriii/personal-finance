@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import Chart from 'chart.js/auto';
 import { HealthService } from '../../services/health.service';
-import { TransactionService, Transaction } from '../../services/transaction.service';
+import { TransactionService } from '../../services/transaction.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,8 +11,6 @@ import { TransactionService, Transaction } from '../../services/transaction.serv
 })
 
 export class DashboardComponent implements OnInit {
-  backendMessage = 'Checking backend...';
-  transactions: Transaction[] = [];
 
   constructor(
     private healthService: HealthService,
@@ -20,31 +18,46 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const token = localStorage.getItem('token');
-    
-    this.healthService.checkHealth().subscribe({
-      next: (res) => {
-        this.backendMessage = res.message;
+    this.transactionService.getTransactions().subscribe({
+      next: transactions => {
+        console.log('Trans:', transactions);
+        this.renderChart(transactions);
       },
-      error: (err) => {
-        console.error(err);
-        this.backendMessage = 'Backend is NOT reachable';
+      error: err => {
+        console.error('error load transactions', err);
       }
     });
+  }
 
-    if (token) {
-      console.log('hhe', token)
-      this.transactionService.getTransactions(token).subscribe({
-        next: data => {
-          this.transactions = data;
-          console.log('Trans:', data);
-        },
-        error: err => {
-          console.error('failed:', err);
-        }
-      });
-    } else {
-      console.log('hehe goblok')
+  renderChart(transactions: any[]) {
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    const map = new Map<string, number>();
+
+    for (const tx of transactions) {
+      if (tx.type === 'expense') {
+        const date = tx.date;
+        const amount = parseFloat(tx.amount);
+
+        map.set(date, (map.get(date) || 0) + amount);
+      }
     }
+
+    for (const [date, total] of map.entries()) {
+      labels.push(date);
+      data.push(total);
+    }
+
+    new Chart('expenseChart', {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Daily Expenses',
+          data
+        }]
+      }
+    });
   }
 }

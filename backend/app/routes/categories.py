@@ -8,7 +8,7 @@ cat_bp = Blueprint("categories", __name__)
 @cat_bp.get("/")
 @jwt_required()
 def list_categories():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     cats = Category.query.filter((Category.user_id == None) | (Category.user_id == user_id)).all()
 
     return [{"id": c.id, "name": c.name, "type": c.type} for c in cats]
@@ -16,7 +16,7 @@ def list_categories():
 @cat_bp.post("/")
 @jwt_required()
 def create_category():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.json
 
     cat = Category(
