@@ -21,4 +21,16 @@ export class TransactionService {
   getTransactions() {
     return this.http.get<any[]>(this.apiUrl);
   }
+
+  getSummary() {
+    return this.http.get<any>(`${this.apiUrl}summary`);
+  }
+
+  getMonthlySummary() {
+    return this.http.get<any>(`${this.apiUrl}summary/monthly`);
+  }
+
+  getCategorySummary() {
+    return this.http.get<any[]>(`${this.apiUrl}summary/category`);
+  }
 }

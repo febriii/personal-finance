@@ -1,8 +1,10 @@
 from flask import Blueprint, request
+from flask.json import jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import Transaction
+from ..models import Transaction, Category
 from .. import db
 from datetime import datetime
+from sqlalchemy import func, case
 
 tx_bp = Blueprint("transactions", __name__)
 
@@ -49,3 +51,89 @@ def list_transactions_public():
         }
         for t in transactions
     ]
+
+@tx_bp.route("/summary", methods=["GET"])
+@jwt_required()
+def summary():
+    user_id = get_jwt_identity()
+
+    income = (
+        db.session.query(func.coalesce(func.sum(Transaction.amount), 0))
+        .filter_by(user_id=user_id, type="income")
+        .scalar()
+    )
+
+    expense = (
+        db.session.query(func.coalesce(func.sum(Transaction.amount), 0))
+        .filter_by(user_id=user_id, type="expense")
+        .scalar()
+    )
+
+    return {
+        "total_income": float(income),
+        "total_expense": float(expense),
+        "balance": float(income - expense)
+    }
+
+@tx_bp.route("/summary/monthly", methods=["GET"])
+@jwt_required()
+def monthly_summary():
+    user_id = get_jwt_identity()
+
+    results = (
+        db.session.query(
+            func.date_trunc('month', Transaction.date).label("month"),
+            func.sum(
+                case(
+                    (Transaction.type == "income", Transaction.amount),
+                    else_=0
+                )
+            ).label("income"),
+            func.sum(
+                case(
+                    (Transaction.type == "expense", Transaction.amount),
+                    else_=0
+                )
+            ).label("expense"),
+        )
+        .filter(Transaction.user_id == user_id)
+        .group_by(func.date_trunc('month', Transaction.date))
+        .order_by(func.date_trunc('month', Transaction.date))
+        .all()
+    )
+    data = []
+    for row in results:
+        data.append({
+            "month": row.month.strftime("%Y-%m"),
+            "income": float(row.income),
+            "expense": float(row.expense)
+        })
+
+    return jsonify(data)
+
+@tx_bp.route("/summary/category", methods=["GET"])
+@jwt_required()
+def category_summary():
+    user_id = get_jwt_identity()
+
+    results = (
+        db.session.query(
+            Category.name.label("category"),
+            func.sum(Transaction.amount).label("total")
+        )
+        .join(Category, Transaction.category_id == Category.id)
+        .filter(Transaction.user_id == user_id)
+        .filter(Transaction.type == "expense") # only expenses
+        .group_by(Category.name)
+        .order_by(func.sum(Transaction.amount).desc())
+        .all()
+    )
+
+    data = []
+    for row in results:
+        data.append({
+            "category": row.category,
+            "total": float(row.total)
+        })
+
+    return jsonify(data)

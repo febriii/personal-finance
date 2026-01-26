@@ -17,6 +17,15 @@ export class DashboardComponent implements OnInit {
     private transactionService: TransactionService
   ) {}
 
+  summary = {
+    total_income: 0,
+    total_expense: 0,
+    balance: 0
+  };
+
+  categoryData: any[] = [];
+  monthlyData: any[] = [];
+
   ngOnInit(): void {
     this.transactionService.getTransactions().subscribe({
       next: transactions => {
@@ -26,6 +35,41 @@ export class DashboardComponent implements OnInit {
       error: err => {
         if (err.status !== 401) {
           console.error('error load transactions', err);
+        }
+      }
+    });
+
+    this.transactionService.getSummary().subscribe({
+      next: (data) => {
+        this.summary = data;
+      },
+      error: (err) => {
+        if (err.status !== 401) {
+          console.error('error load daily summary', err);
+        }
+      }
+    });
+
+    this.transactionService.getCategorySummary().subscribe({
+      next: (data) => {
+        this.categoryData = data;
+        this.renderCategoryChart();
+      },
+      error: (err) => {
+        if (err.status !== 401) {
+          console.error('error load category summary', err);
+        }
+      }
+    });
+  
+    this.transactionService.getMonthlySummary().subscribe({
+      next: (data) => {
+        this.monthlyData = data;
+        this.renderMonthlyChart();
+      },
+      error: (err) => {
+        if (err.status !== 401) {
+          console.error('error load monthly summary', err);
         }
       }
     });
@@ -59,6 +103,46 @@ export class DashboardComponent implements OnInit {
           label: 'Daily Expenses',
           data
         }]
+      }
+    });
+  }
+
+  renderMonthlyChart() {
+    const labels = this.monthlyData.map(d => d.month);
+    const incomeData = this.monthlyData.map(d => d.income);
+    const expenseData = this.monthlyData.map(d => d.expense);
+
+    new Chart('monthlyChart', {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeData
+          },
+          {
+            label: 'Expense',
+            data: expenseData
+          }
+        ]
+      }
+    });
+  }
+
+  renderCategoryChart() {
+    const labels = this.categoryData.map(d => d.category);
+    const values = this.categoryData.map(d => d.total);
+
+    new Chart('categoryChart', {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [
+          {
+            data: values
+          }
+        ]
       }
     });
   }

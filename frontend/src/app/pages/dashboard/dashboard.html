@@ -1,3 +1,11 @@
 <h1>Dashboard</h1>
 
+<canvas id="monthlyChart"></canvas>
+<canvas id="categoryChart"></canvas>
 <canvas id="expenseChart"></canvas>
+
+<div class="summary">
+  <p>Income: {{ summary.total_income }}</p>
+  <p>Expense: {{ summary.total_expense }}</p>
+  <p>Balance: {{ summary.balance }}</p>
+</div>
