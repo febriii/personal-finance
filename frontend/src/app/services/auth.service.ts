@@ -1,17 +1,25 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private api = 'http://localhost:5000/auth';
-  private tokenKey = 'token';
+  private accessKey = 'token';
+  private refreshKey = 'refresh_token';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router
+  ) {}
 
   login(email: string, password: string) {
     return this.http.post<any>(`${this.api}/login`, { email, password })
-      .pipe(tap(res => localStorage.setItem(this.tokenKey, res.access_token)));
+      .pipe(tap(res => {
+        localStorage.setItem(this.accessKey, res.access_token);
+        localStorage.setItem(this.refreshKey, res.refresh_token);
+      }));
   }
 
   register(data: any) {
@@ -19,10 +27,20 @@ export class AuthService {
   }
 
   getToken() {
-    return localStorage.getItem(this.tokenKey);
+    return localStorage.getItem(this.accessKey);
+  }
+
+  getRefreshToken() {
+    return localStorage.getItem(this.refreshKey);
+  }
+
+  setToken(token: string) {
+    localStorage.setItem(this.accessKey, token);
   }
 
   logout() {
-    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.accessKey);
+    localStorage.removeItem(this.refreshKey);
+    this.router.navigate([ '/login' ]);
   }
 }

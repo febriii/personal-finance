@@ -20,11 +20,13 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.transactionService.getTransactions().subscribe({
       next: transactions => {
-        console.log('Trans:', transactions);
+        // console.log('Trans:', transactions);
         this.renderChart(transactions);
       },
       error: err => {
-        console.error('error load transactions', err);
+        if (err.status !== 401) {
+          console.error('error load transactions', err);
+        }
       }
     });
   }
