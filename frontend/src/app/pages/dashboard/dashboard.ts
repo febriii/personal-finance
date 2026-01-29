@@ -73,6 +73,30 @@ export class DashboardComponent implements OnInit {
         }
       }
     });
+    
+    this.transactionService.getCategorySummaryPie().subscribe({
+      next: (data) => {
+        const labels = data.map(item => item.category);
+        const totals = data.map(item => item.total);
+  
+        new Chart('categoryPieChart', {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                data: totals
+              }
+            ]
+          }
+        });
+      },
+      error: (err) => {
+        if (err.status !== 401) {
+          console.error('error load category summary pie', err);
+        }
+      }
+    });
   }
 
   renderChart(transactions: any[]) {

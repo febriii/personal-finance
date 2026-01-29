@@ -137,3 +137,27 @@ def category_summary():
         })
 
     return jsonify(data)
+
+@tx_bp.get("/summary/categories")
+@jwt_required()
+def category_summary_pie():
+    user_id = get_jwt_identity()
+
+    results = (
+        db.session.query(
+            Category.name.label("category"),
+            func.sum(Transaction.amount).label("total")
+        )
+        .join(Category, Transaction.category_id == Category.id)
+        .filter(Transaction.user_id == user_id)
+        .filter(Transaction.type == "expense")
+        .group_by(Category.name)
+        .all()
+    )
+
+    data = [
+        { "category": row.category, "total": float(row.total) }
+        for row in results
+    ]
+
+    return jsonify(data)
