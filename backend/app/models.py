@@ -19,8 +19,10 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Category(db.Model):
+    __tablename__ = "category"
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
+    name = db.Column(db.String(120), nullable=False)
     type = db.Column(db.String(20))  # "expense" or "income"
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
@@ -28,7 +30,6 @@ class Transaction(db.Model):
     __tablename__ = "transactions"
     
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(100), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
 
@@ -38,3 +39,4 @@ class Transaction(db.Model):
     description = db.Column(db.String(255), nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.now)
+    category = db.relationship("Category", backref="transactions") # ORM level link
