@@ -23,22 +23,11 @@ export class DashboardComponent implements OnInit {
     balance: 0
   };
 
+  transactionData: any[] = [];
   categoryData: any[] = [];
   monthlyData: any[] = [];
 
   ngOnInit(): void {
-    this.transactionService.getTransactions().subscribe({
-      next: transactions => {
-        // console.log('Trans:', transactions);
-        this.renderChart(transactions);
-      },
-      error: err => {
-        if (err.status !== 401) {
-          console.error('error load transactions', err);
-        }
-      }
-    });
-
     this.transactionService.getSummary().subscribe({
       next: (data) => {
         this.summary = data;
@@ -50,11 +39,26 @@ export class DashboardComponent implements OnInit {
       }
     });
   
-    this.loadMonthlyBarChart();
-    this.loadCategorySummaryPieChart();
+    this.loadTransactionData();
+    this.loadMonthlyData();
+    this.loadCategorySummaryData();
   }
 
-  loadMonthlyBarChart() {
+  loadTransactionData() {
+    this.transactionService.getTransactions().subscribe({
+      next: (data) => {
+        this.transactionData = data;
+        this.renderTransactionBarChart();
+      },
+      error: err => {
+        if (err.status !== 401) {
+          console.error('error load transactions', err);
+        }
+      }
+    });
+  }
+
+  loadMonthlyData() {
     this.transactionService.getMonthlySummary().subscribe({
       next: (data) => {
         this.monthlyData = data;
@@ -68,11 +72,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  loadCategorySummaryPieChart() {
+  loadCategorySummaryData() {
     this.transactionService.getCategorySummary().subscribe({
       next: (data) => {
         this.categoryData = data;
-        this.renderCategoryChart();
+        this.renderCategorySummaryPieChart();
       },
       error: (err) => {
         if (err.status !== 401) {
@@ -82,13 +86,13 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  renderChart(transactions: any[]) {
+  renderTransactionBarChart() {
     const labels: string[] = [];
     const data: number[] = [];
 
     const map = new Map<string, number>();
 
-    for (const tx of transactions) {
+    for (const tx of this.transactionData) {
       if (tx.type === 'expense') {
         const date = tx.date;
         const amount = parseFloat(tx.amount);
@@ -137,7 +141,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  renderCategoryChart() {
+  renderCategorySummaryPieChart() {
     const labels = this.categoryData.map(d => d.category);
     const values = this.categoryData.map(d => d.total);
 
