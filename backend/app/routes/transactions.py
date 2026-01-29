@@ -111,36 +111,9 @@ def monthly_summary():
 
     return jsonify(data)
 
-@tx_bp.route("/summary/category", methods=["GET"])
+@tx_bp.get("/summary/category")
 @jwt_required()
 def category_summary():
-    user_id = get_jwt_identity()
-
-    results = (
-        db.session.query(
-            Category.name.label("category"),
-            func.sum(Transaction.amount).label("total")
-        )
-        .join(Category, Transaction.category_id == Category.id)
-        .filter(Transaction.user_id == user_id)
-        .filter(Transaction.type == "expense") # only expenses
-        .group_by(Category.name)
-        .order_by(func.sum(Transaction.amount).desc())
-        .all()
-    )
-
-    data = []
-    for row in results:
-        data.append({
-            "category": row.category,
-            "total": float(row.total)
-        })
-
-    return jsonify(data)
-
-@tx_bp.get("/summary/categories")
-@jwt_required()
-def category_summary_pie():
     user_id = get_jwt_identity()
 
     results = (

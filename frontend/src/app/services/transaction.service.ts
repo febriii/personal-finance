@@ -33,8 +33,4 @@ export class TransactionService {
   getCategorySummary() {
     return this.http.get<any[]>(`${this.apiUrl}summary/category`);
   }
-
-  getCategorySummaryPie() {
-    return this.http.get<any[]>(`${this.apiUrl}summary/categories`);
-  }
 }

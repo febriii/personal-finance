@@ -49,19 +49,12 @@ export class DashboardComponent implements OnInit {
         }
       }
     });
-
-    this.transactionService.getCategorySummary().subscribe({
-      next: (data) => {
-        this.categoryData = data;
-        this.renderCategoryChart();
-      },
-      error: (err) => {
-        if (err.status !== 401) {
-          console.error('error load category summary', err);
-        }
-      }
-    });
   
+    this.loadMonthlyBarChart();
+    this.loadCategorySummaryPieChart();
+  }
+
+  loadMonthlyBarChart() {
     this.transactionService.getMonthlySummary().subscribe({
       next: (data) => {
         this.monthlyData = data;
@@ -73,27 +66,17 @@ export class DashboardComponent implements OnInit {
         }
       }
     });
-    
-    this.transactionService.getCategorySummaryPie().subscribe({
+  }
+
+  loadCategorySummaryPieChart() {
+    this.transactionService.getCategorySummary().subscribe({
       next: (data) => {
-        const labels = data.map(item => item.category);
-        const totals = data.map(item => item.total);
-  
-        new Chart('categoryPieChart', {
-          type: 'pie',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                data: totals
-              }
-            ]
-          }
-        });
+        this.categoryData = data;
+        this.renderCategoryChart();
       },
       error: (err) => {
         if (err.status !== 401) {
-          console.error('error load category summary pie', err);
+          console.error('error load category summary', err);
         }
       }
     });
