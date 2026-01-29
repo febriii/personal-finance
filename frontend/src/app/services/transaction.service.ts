@@ -18,6 +18,14 @@ export class TransactionService {
 
   constructor(private http: HttpClient) {}
 
+  addTransaction(data: any): Observable<any> {
+    return this.http.post(this.apiUrl, data);
+  }
+
+  getCategories() {
+    return this.http.get<any[]>('http://localhost:5000/categories/');
+  }
+  
   getTransactions() {
     return this.http.get<any[]>(this.apiUrl);
   }

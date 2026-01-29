@@ -2,10 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import Chart from 'chart.js/auto';
 import { HealthService } from '../../services/health.service';
 import { TransactionService } from '../../services/transaction.service';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  imports: [FormsModule, CommonModule],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
@@ -22,10 +25,25 @@ export class DashboardComponent implements OnInit {
     total_expense: 0,
     balance: 0
   };
+  newTransaction = {
+    amount: 0,
+    type: 'expense',
+    date: '',
+    description: '',
+    category_id: 1
+  };
+  modals = {
+    addTransaction: false
+  }
 
   transactionData: any[] = [];
   categoryData: any[] = [];
   monthlyData: any[] = [];
+  categories: any[] = [];
+
+  monthlyChartID: any;
+  categoryChartID: any;
+  expenseChartID: any;
 
   ngOnInit(): void {
     this.transactionService.getSummary().subscribe({
@@ -39,9 +57,34 @@ export class DashboardComponent implements OnInit {
       }
     });
   
+    this.loadCategories();
     this.loadTransactionData();
     this.loadMonthlyData();
     this.loadCategorySummaryData();
+  }
+
+  submitTransaction() {
+    this.transactionService.addTransaction(this.newTransaction).subscribe({
+      next: () => {
+        alert('Transaction added!');
+        
+        this.newTransaction = {
+          amount: 0,
+          type: 'expense',
+          date: '',
+          description: '',
+          category_id: 1
+        };
+        
+        this.loadTransactionData();
+        this.toggleModal('addTransaction', false);
+      },
+      error: (err) => {
+        if (err.status !== 401) {
+          console.error('error submitting transaction data', err);
+        }
+      }
+    });
   }
 
   loadTransactionData() {
@@ -106,7 +149,11 @@ export class DashboardComponent implements OnInit {
       data.push(total);
     }
 
-    new Chart('expenseChart', {
+    if (this.expenseChartID) {
+      this.expenseChartID.destroy();
+    }
+
+    this.expenseChartID = new Chart('expenseChartID', {
       type: 'bar',
       data: {
         labels,
@@ -123,7 +170,11 @@ export class DashboardComponent implements OnInit {
     const incomeData = this.monthlyData.map(d => d.income);
     const expenseData = this.monthlyData.map(d => d.expense);
 
-    new Chart('monthlyChart', {
+    if (this.monthlyChartID) {
+      this.monthlyChartID.destroy();
+    }
+    
+    this.monthlyChartID = new Chart('monthlyChartID', {
       type: 'bar',
       data: {
         labels,
@@ -145,7 +196,11 @@ export class DashboardComponent implements OnInit {
     const labels = this.categoryData.map(d => d.category);
     const values = this.categoryData.map(d => d.total);
 
-    new Chart('categoryChart', {
+    if (this.categoryChartID) {
+      this.categoryChartID.destroy();
+    }
+    
+    this.categoryChartID = new Chart('categoryChartID', {
       type: 'pie',
       data: {
         labels,
@@ -156,5 +211,22 @@ export class DashboardComponent implements OnInit {
         ]
       }
     });
+  }
+
+  loadCategories() {
+    this.transactionService.getCategories().subscribe({
+    next: (data) => {
+      this.categories = data;
+    },
+    error: (err) => {
+        if (err.status !== 401) {
+          console.error('error load categories', err);
+        }
+      }
+  });
+  }
+
+  toggleModal(key: keyof typeof this.modals, isOpen: boolean) {
+    this.modals[key] = isOpen;
   }
 }

@@ -1,11 +1,62 @@
 <h1>Dashboard</h1>
 
-<canvas id="monthlyChart"></canvas>
-<canvas id="categoryChart"></canvas>
-<canvas id="expenseChart"></canvas>
+<button class="add-btn" (click)="toggleModal('addTransaction', true)">
+  + Add Transaction
+</button>
+
+<hr />
+
+<h2>Transactions</h2>
+
+<ul>
+  <li *ngFor="let tx of transactionData">
+    {{ tx.date }} — {{ tx.description }} — Rp {{ tx.amount }}
+  </li>
+</ul>
+
+<canvas id="monthlyChartID"></canvas>
+<canvas id="categoryChartID"></canvas>
+<canvas id="expenseChartID"></canvas>
 
 <div class="summary">
   <p>Income: {{ summary.total_income }}</p>
   <p>Expense: {{ summary.total_expense }}</p>
   <p>Balance: {{ summary.balance }}</p>
+</div>
+
+<div class="modal-backdrop" *ngIf="modals.addTransaction">
+  <div class="modal-box">
+    <h2>Add Transaction</h2>
+
+    <form (ngSubmit)="submitTransaction()">
+      <label>Amount:</label>
+      <input type="number" [(ngModel)]="newTransaction.amount" name="amount" required />
+
+      <label>Type:</label>
+      <select [(ngModel)]="newTransaction.type" name="type" required>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+
+      <label>Date:</label>
+      <input type="date" [(ngModel)]="newTransaction.date" name="date" required />
+
+      <label>Description:</label>
+      <input type="text" [(ngModel)]="newTransaction.description" name="description" required />
+
+      <label>Category ID:</label>
+      <select [(ngModel)]="newTransaction.category_id" name="category_id" required>
+        <option value="" disabled selected>Select category</option>
+        <option *ngFor="let c of categories" [value]="c.id">
+          {{ c.name }}
+        </option>
+      </select>
+
+
+      <div class="actions">
+        <button type="submit">Save</button>
+        <button type="button" (click)="toggleModal('addTransaction', false)">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
